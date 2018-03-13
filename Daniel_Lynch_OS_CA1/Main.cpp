@@ -19,7 +19,7 @@ int main() {
 
 	//create job buffer initially empty
 	std::deque<Task> ALL_JOBS;
-	ALL_JOBS = ReadInJobs();
+	//ALL_JOBS = ReadInJobs();
 
 	std::deque<Task> FiFo;
 	std::deque<Task> SJF;
@@ -40,12 +40,13 @@ int main() {
 
 
 }
-
+/*
 std::deque<Task> ReadInJobs() {
 
 
-
+	
 }
+*/
 
 //splits a string using a delimiter and returns a vector e.g. "torch/light/walk" and "/" returns torch, light, walk
 std::deque<std::string> split(std::string &data, std::string delimiter)
