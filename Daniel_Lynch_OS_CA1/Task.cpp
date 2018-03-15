@@ -48,6 +48,11 @@ void Task::setArrival_Time(int input)
 	Task::Arrival_Time = input;
 }
 
+void Task::setCompleted_Time(int input)
+{
+	Task::Completed_Time = input;
+}
+
 int Task::getRuntime()
 {
 	return Task::Runtime;
@@ -67,3 +72,9 @@ int Task::getProgress()
 {
 	return Task::Progress;
 }
+
+int Task::getCompleted_Time()
+{
+	return Task::Completed_Time;
+}
+
