@@ -45,8 +45,8 @@ float GetTurnaround(Task task);
 
 
 void sort_SJF(std::deque<Task> &input); // Looks at Runtime, sorts by shortest first
-void sort_SJtC(std::deque<Task> input); //Looks at Runtime - Progress, sorts by by shortest first
-void sort_RR(std::deque<Task> input); //Switches between each task equally
+void sort_SJtC(std::deque<Task> &input); //Looks at Runtime - Progress, sorts by by shortest first
+void sort_RR(std::deque<Task> &input); //Switches between each task equally
 
 int main() {
 
@@ -73,6 +73,8 @@ int main() {
 										Completed_STtC, Completed_RR, 
 										ALL_JOBS.size()); i++)
 	{
+
+		system("pause");
 		//for all of our schedulers, add any new jobs - not effiecent but does the job
 		addNewJobs(FiFo, ALL_JOBS, i);
 		addNewJobs(SJF, ALL_JOBS, i);
@@ -81,27 +83,47 @@ int main() {
 
 		//Sort all of our schedulers
 		sort_SJF(SJF);
-
+		sort_SJtC(STtC);
+		sort_RR(RR);
 
 		//All schedulers progress each task
-		FiFo[0].tick();
-		SJF[0].tick();
+		if (!FiFo.empty()) { FiFo[0].tick(); }
+		if (!SJF.empty()) { SJF[0].tick(); }
+		if (!STtC.empty()) { STtC[0].tick(); }
+		if (!RR.empty()) { RR[0].tick(); }
+		std::cout << "Processed index 0" << std::endl;
 
 		//All scheduler check completeion
-		if (FiFo[0].checkComplete())
+		if (!FiFo.empty() && FiFo[0].checkComplete())
 		{
-			FiFo[0].setCompleted_Time(i);
-			Completed_FiFo.push_back(FiFo[0]);
-			std::cout << "COMPLETED: " << FiFo[0].getID() << std::endl;
-			FiFo.pop_front();
+			FiFo[0].setCompleted_Time(i); //set completed time
+			Completed_FiFo.push_back(FiFo[0]); //add to completed list
+			std::cout << "FIFO - COMPLETED: " << FiFo[0].getID() << std::endl; //console output
+			FiFo.pop_front(); //pop off front
 		}
 
-		if (SJF[0].checkComplete())
+		if (!SJF.empty() && SJF[0].checkComplete())
 		{
 			SJF[0].setCompleted_Time(i);
-			Completed_FiFo.push_back(SJF[0]);
-			std::cout << "COMPLETED: " << SJF[0].getID() << std::endl;
+			Completed_SJF.push_back(SJF[0]);
+			std::cout << "SJF - COMPLETED: " << SJF[0].getID() << std::endl;
 			SJF.pop_front();
+		}
+
+		if (!STtC.empty() && STtC[0].checkComplete())
+		{
+			STtC[0].setCompleted_Time(i);
+			Completed_STtC.push_back(STtC[0]);
+			std::cout << "STTCF - COMPLETED: " << STtC[0].getID() << std::endl;
+			STtC.pop_front();
+		}
+
+		if (!RR.empty() && RR[0].checkComplete())
+		{
+			RR[0].setCompleted_Time(i);
+			Completed_RR.push_back(RR[0]);
+			std::cout << "RR - COMPLETED: " << RR[0].getID() << std::endl;
+			RR.pop_front();
 		}
 
 	}//end main loop
@@ -242,19 +264,20 @@ void addNewJobs(std::deque<Task> &scheduler, std::deque<Task> ALLJOBS, int itera
 		if (ALLJOBS[k].Arrival_Time == iteration) 
 		{
 			scheduler.push_back(ALLJOBS[k]);
-			std::cout << "ARRIVED:" << ALLJOBS[k].getID() << std::endl;
+			std::cout << "ARRIVED:" << ALLJOBS[k].getID() << " Runtime - " << ALLJOBS[k].getRuntime() << std::endl;
 		}
 
 	}
 
 }
 
-//Sorts by sortest runtime in the list -- modified bubble sort
+//Sorts by shortest runtime in the list -- modified bubble sort
 void sort_SJF(std::deque<Task> &input)
 {
 	bool swapped;
 
-	if (input.size() < 1)
+	//leave if empty
+	if (input.size() < 2)
 		return;
 
 	//for every element except the last
@@ -273,6 +296,47 @@ void sort_SJF(std::deque<Task> &input)
 		if (!swapped)
 			break;
 	}
+}
+
+//sorts by shortest (runtime - progress) in the list - bubble sort
+void sort_SJtC(std::deque<Task> &input)
+{
+	bool swapped;
+
+	if (input.size() < 2)
+		return;
+
+	//for every element except the last
+	for (int i = 0; i < input.size() - 1; i++)
+	{
+		swapped = false;
+		for (int j = 0; j < input.size() - 1; j++)
+		{
+			
+			if ((input[j].getRuntime() - input[j].getProgress()) > (input[j + 1].getRuntime() - input[j + 1].getProgress() ))
+			{
+				swapTask(input[j], input[j + 1]);
+				swapped = true;
+			}
+		}
+
+		if (!swapped)
+			break;
+	}
+
+}
+
+//Puts "0" on back and shifts forwards
+void sort_RR(std::deque<Task>& input)
+{
+	if (input.size() < 2)
+		return;
+
+	Task temp;
+	temp = input[0];
+
+	input.pop_front();
+	input.push_back(temp);
 }
 
 //input tasklist and task, matches by ID
