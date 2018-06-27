@@ -1,0 +1,12 @@
+
+CC=g++
+CFLAGS=-I.
+DEPS = Task.h
+OBJ = Main.o Task.o
+
+%.o: %.cpp $(DEPS)
+	$(cc) -c -o $@ $< $(CFLAGS)
+
+Main: $(OBJ)
+	g++ -o $@ $^ $(CFLAGS)
+	

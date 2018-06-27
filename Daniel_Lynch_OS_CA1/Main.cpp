@@ -8,7 +8,8 @@
 #include <stdio.h>
 
 // Author: Daniel Lynch
-// Known Issues: -> Make sure there is no blank line at end of jobs.txt
+// Known Issues: -> Make sure there is no blank line at end of jobs.
+//				-> Code is super inefficent, could do with using a list of list of jobs, then 1 loop can do everything
 /*	
 	C++ app to schedule hypothetical Tasks/Processes/Jobs by:
 		> First in first out
@@ -37,61 +38,79 @@
 std::deque<Task> ReadInJobs(std::string path);
 std::deque<std::string> split(std::string &data, std::string delimiter);
 bool checkArrivedComplete(std::deque<Task> &inputList, int iteration);
-bool checkAllComplete(std::deque<Task> &FIFO, std::deque<Task> &SJF, std::deque<Task> &SJtC, std::deque<Task> &RR, int max);
+bool checkAllComplete(std::deque<Task> &FIFO, std::deque<Task> &SJF, std::deque<Task> &SJtC, std::deque<Task> &RR, std::deque<Task> &RR2, int max);
 void addNewJobs(std::deque<Task> &scheduler, std::deque<Task> ALLJOBS, int iteration);
 void swapTask(Task &x, Task &y);
 Task GetMatchingTask(std::deque<Task> list, Task task);
 float GetTurnaround(Task task);
+int main(int argc, char ** argv);
+void GetAggregatStatistics(std::deque<Task> inputList, float &avg_turn, float &avg_res);
+void lineBreak();
+void OutputArrivedJobs(std::deque<Task> inputList, int iteration);
 
 
 void sort_SJF(std::deque<Task> &input); // Looks at Runtime, sorts by shortest first
 void sort_SJtC(std::deque<Task> &input); //Looks at Runtime - Progress, sorts by by shortest first
 void sort_RR(std::deque<Task> &input); //Switches between each task equally
 
-int main() {
 
+// pass name of jobs file as agruement when calling .exe
+int main(int argc, char **argv) {
 
-	Task test = Task("0x12345678",2,3);
+	std::string path;
 
-	std::cout << test.getID() << std::endl;
-
-	//read in all of our jobs that have to happen into Task jobs;
+	if (argc < 2)
+		path = "Jobs.txt";
+	else
+		path = argv[1];
 
 	//create job buffer initially empty
 	std::deque<Task> ALL_JOBS;
-	ALL_JOBS = ReadInJobs("Jobs.txt");
-	std::cout << ALL_JOBS[0].getID() << std::endl;
+	ALL_JOBS = ReadInJobs(path);
 
+	//Timeslice variables
+	int timeSlice_One = 1; //used on most schedulers 
+	int timeSlice_Two = 2; //only used on RR2
 
+	//define Tasklist and completed lists
 	std::deque<Task> FiFo, Completed_FiFo;
 	std::deque<Task> SJF, Completed_SJF;
 	std::deque<Task> STtC, Completed_STtC;
 	std::deque<Task> RR, Completed_RR;
+	std::deque<Task> RR2, Completed_RR2;
 
 	//MAIN LOOP - loops until AllCompleted jobs equal all jobs size
 	for (int i = 1; !checkAllComplete(Completed_FiFo, Completed_SJF, 
-										Completed_STtC, Completed_RR, 
+										Completed_STtC, Completed_RR, Completed_RR2,
 										ALL_JOBS.size()); i++)
 	{
+		bool newJob = false;
+		std::cout << "---------------- ITERATION " << i << "----------------" << std::endl;
 
-		system("pause");
+		//ouput arrived jobs
+		OutputArrivedJobs(ALL_JOBS, i);
+
 		//for all of our schedulers, add any new jobs - not effiecent but does the job
 		addNewJobs(FiFo, ALL_JOBS, i);
 		addNewJobs(SJF, ALL_JOBS, i);
 		addNewJobs(STtC, ALL_JOBS, i);
 		addNewJobs(RR , ALL_JOBS, i);
+		addNewJobs(RR2, ALL_JOBS, i);
 
 		//Sort all of our schedulers
-		sort_SJF(SJF);
-		sort_SJtC(STtC);
-		sort_RR(RR);
+		if (i % timeSlice_One == 0) {
+			sort_SJF(SJF);
+			sort_SJtC(STtC);
+			sort_RR(RR);
+		}
+		if (i % timeSlice_Two == 0) { sort_RR(RR2); }
 
 		//All schedulers progress each task
-		if (!FiFo.empty()) { FiFo[0].tick(); }
-		if (!SJF.empty()) { SJF[0].tick(); }
-		if (!STtC.empty()) { STtC[0].tick(); }
-		if (!RR.empty()) { RR[0].tick(); }
-		std::cout << "Processed index 0" << std::endl;
+		if (!FiFo.empty()) { FiFo[0].tick(i); }
+		if (!SJF.empty()) { SJF[0].tick(i); }
+		if (!STtC.empty()) { STtC[0].tick(i); }
+		if (!RR.empty()) { RR[0].tick(i); }
+		if (!RR2.empty()) { RR2[0].tick(i); }
 
 		//All scheduler check completeion
 		if (!FiFo.empty() && FiFo[0].checkComplete())
@@ -126,39 +145,112 @@ int main() {
 			RR.pop_front();
 		}
 
-	}//end main loop
+		if (!RR2.empty() && RR2[0].checkComplete())
+		{
+			RR2[0].setCompleted_Time(i);
+			Completed_RR2.push_back(RR2[0]);
+			std::cout << "RR2 - COMPLETED: " << RR2[0].getID() << std::endl;
+			RR2.pop_front();
+		}
 
+	}//end main loop
+	
 	//per job statistics
 	//Turn AroundTime
+	lineBreak();
 	std::cout << "Turnaround Time:" << std::endl;
-	std::cout << "\\t JOB \\t FIFO \\t SJF \\t STTCF \\t RR" << std::endl;
+	std::cout << "\t JOB \t FIFO \t SJF \t STTCF \t RR \t RR2" << std::endl;
 	for (int i = 0; i < ALL_JOBS.size(); i++) {
 
-		float t_FIFO, t_SJF, t_STTCF, t_RR;
-		Task FIFO, SJF, STTCF, RR;
+		float t_FIFO, t_SJF, t_STTCF, t_RR, t_RR2;
+		Task FIFO, SJF, STTCF, RR, RR2;
 
 		// For each job, pull the completed job from compelted list
 		FIFO = GetMatchingTask(Completed_FiFo, ALL_JOBS[i]);
 		SJF = GetMatchingTask(Completed_SJF, ALL_JOBS[i]);
 		STTCF = GetMatchingTask(Completed_STtC, ALL_JOBS[i]);
 		RR = GetMatchingTask(Completed_RR, ALL_JOBS[i]);
+		RR2 = GetMatchingTask(Completed_RR2, ALL_JOBS[i]);
 
 		//for each job, get its response time
 		t_FIFO = GetTurnaround(FIFO);
 		t_SJF = GetTurnaround(SJF);
 		t_STTCF = GetTurnaround(STTCF);
 		t_RR = GetTurnaround(RR);
+		t_RR2 = GetTurnaround(RR2);
 
 		//output information
-		std::cout << "\\t" << (i + 1) <<
-			"\\t" << t_FIFO <<
-			"\\t" << t_SJF <<
-			"\\t" << t_STTCF <<
-			"\\t" << t_RR << std::endl;
+		std::cout << "\t" << ALL_JOBS[i].getID() <<
+			"\t" << t_FIFO <<
+			"\t" << t_SJF <<
+			"\t" << t_STTCF <<
+			"\t" << t_RR << 
+			"\t" << t_RR2 <<
+			std::endl;
+	}
+	lineBreak();
+	std::cout << "AVERAGE RESPONSE AND TURNAROUND TIME PER SCHEDULER" << std::endl; //line break
 
+	//Aggregate Statistics
+	std::cout << "\t SCHEDULER \t TURNAROUND \t RESPONSE" << std::endl;
+	float avg_res = 0;
+	float avg_turn = 0;
+
+	//FIFO
+	GetAggregatStatistics(Completed_FiFo, avg_turn, avg_res);
+	std::cout << "\t FIFO \t\t" << avg_turn << "\t\t" << avg_res << std::endl;
+
+	//SJF
+	avg_res = 0;
+	avg_turn = 0;
+	GetAggregatStatistics(Completed_SJF, avg_turn, avg_res);
+	std::cout << "\t SJF \t\t" << avg_turn << "\t\t" << avg_res << std::endl;
+
+	//STTCF
+	avg_res = 0;
+	avg_turn = 0;
+	GetAggregatStatistics(Completed_STtC, avg_turn, avg_res);
+	std::cout << "\t STTCF \t\t" << avg_turn << "\t\t" << avg_res << std::endl;
+
+	//RR
+	avg_res = 0;
+	avg_turn = 0;
+	GetAggregatStatistics(Completed_RR, avg_turn, avg_res);
+	std::cout << "\t RR \t\t" << avg_turn << "\t\t" << avg_res << std::endl;
+
+	//RR2
+	avg_res = 0;
+	avg_turn = 0;
+	GetAggregatStatistics(Completed_RR2, avg_turn, avg_res);
+	std::cout << "\t RR2 \t\t" << avg_turn << "\t\t" << avg_res << std::endl;
+
+	system("pause");
+
+
+}
+
+//pass in job list and current iteration, outputs to console what job just arrived.
+void OutputArrivedJobs(std::deque<Task> inputList, int iteration) {
+
+	for (int k = 0; k < inputList.size(); k++) {
+
+		if (iteration == inputList[k].getArrival_Time())
+			std::cout << "ARRIVED: " << inputList[k].getID() << std::endl;
 	}
 
+}
 
+//Pass in a list of tasks, will set average turnaround and response times
+void GetAggregatStatistics(std::deque<Task> inputList, float &avg_turn, float &avg_res) {
+
+	for (int i = 0; i < inputList.size(); i++)
+	{
+		avg_turn = avg_turn + GetTurnaround(inputList[i]);
+		avg_res = avg_res + inputList[i].getResponseTime();
+	}
+
+	avg_turn = avg_turn / inputList.size();
+	avg_res = avg_res / inputList.size();
 
 }
 
@@ -236,7 +328,7 @@ bool checkArrivedComplete(std::deque<Task> &inputList, int iteration)
 }
 
 //checks if all schedulers have completed all their tasks
-bool checkAllComplete(std::deque<Task> &FIFO, std::deque<Task> &SJF, std::deque<Task> &SJtC, std::deque<Task> &RR, int max) {
+bool checkAllComplete(std::deque<Task> &FIFO, std::deque<Task> &SJF, std::deque<Task> &SJtC, std::deque<Task> &RR, std::deque<Task> &RR2, int max) {
 
 	if (FIFO.size() < max)
 		return false;
@@ -250,6 +342,9 @@ bool checkAllComplete(std::deque<Task> &FIFO, std::deque<Task> &SJF, std::deque<
 	if (RR.size() < max)
 		return false;
 
+	if (RR2.size() < max)
+		return false;
+
 	//we we got this far we've nothing left to do
 	return true;
 }
@@ -261,10 +356,10 @@ void addNewJobs(std::deque<Task> &scheduler, std::deque<Task> ALLJOBS, int itera
 	for (int k = 0; k < ALLJOBS.size(); k++)
 	{
 		// if the job arrives at this time, then add it to the list
-		if (ALLJOBS[k].Arrival_Time == iteration) 
+		if (ALLJOBS[k].Arrival_Time == iteration)
 		{
 			scheduler.push_back(ALLJOBS[k]);
-			std::cout << "ARRIVED:" << ALLJOBS[k].getID() << " Runtime - " << ALLJOBS[k].getRuntime() << std::endl;
+		
 		}
 
 	}
@@ -350,48 +445,13 @@ Task GetMatchingTask(std::deque<Task> list, Task task) {
 	//if it doesn't find a match
 }
 
+//pass in a task, returns you its turnaround time
 float GetTurnaround(Task task) {
 
 	return task.getCompleted_Time() - task.getArrival_Time();
 }
 
-//---------------- sorting stuff. REF: https://www.geeksforgeeks.org/bubble-sort/ ----------------
-
-void swapTask(Task &x, Task &y)
-{
-	Task temp = x;
-	x = y;
-	y = temp;
-
+//does a line break
+void lineBreak() {
+	std::cout << std::endl;
 }
-
-/* An optimized version of Bubble Sort
-void bubbleSort(std::deque<Task> inputTask, int n)
-{
-	int i, j;
-	bool swapped;
-	for (i = 0; i < n - 1; i++)
-	{
-		swapped = false;
-		for (j = 0; j < n - i - 1; j++)
-		{
-			if (inputTask[j]. > arr[j + 1])
-			{
-				swap(&arr[j], &arr[j + 1]);
-				swapped = true;
-			}
-		}
-
-		// IF no two elements were swapped by inner loop, then break
-		if (swapped == false)
-			break;
-	}
-}
-void swap(int *xp, int *yp)
-{
-int temp = *xp;
-*xp = *yp;
-*yp = temp;
-}
-
-*/

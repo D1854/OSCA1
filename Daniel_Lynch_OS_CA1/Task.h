@@ -9,7 +9,7 @@ class Task
 public:
 
 	//local Variables
-	int Runtime, Arrival_Time, Progress, Completed_Time;
+	int Runtime, Arrival_Time, Progress, Completed_Time, Response_Time;
 	std::string ID;
 
 	//black constructor (When user creates a new email)
@@ -19,7 +19,7 @@ public:
 	Task(std::string ID, int Runtime, int Arrival_Time);
 
 	//Progress Functions
-	void tick();
+	void tick(int iteration);
 	bool checkComplete();
 
 	void setID(std::string input);
@@ -34,12 +34,8 @@ public:
 	std::string getID();
 	int getProgress();
 	int getCompleted_Time();
+	int getResponseTime() { return Task::Response_Time; };
 
-	//sorters
-	void sort_FiFo(); //Wings it
-	void sort_SJF(); // Looks at Runtime, sorts by shortest first
-	void sort_SJtC(); //Looks at Runtime - Progress, sorts by by shortest first
-	void sort_RR(); //Switches between each task equally
 
 	
 

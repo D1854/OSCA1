@@ -17,10 +17,14 @@ Task::Task(std::string ID, int Runtime, int Arrival_Time)
 	setRuntime(Runtime);
 	setArrival_Time(Arrival_Time);
 	Task::Progress = 0;
+	Task::Response_Time = -1; //stays as -1 untill its set
 }
 
-void Task::tick()
+void Task::tick(int iteration)
 {
+	if (Task::Response_Time < 0)
+		Task::Response_Time = (iteration - 1) - Task::Arrival_Time; // -1 because our "i" in main loop starts at 1
+
 	Task::Progress++;
 }
 

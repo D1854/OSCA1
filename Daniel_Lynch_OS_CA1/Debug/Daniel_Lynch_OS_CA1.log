@@ -1,0 +1,21 @@
+﻿  Main.cpp
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(163): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(235): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(246): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(320): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(333): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(336): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(339): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(342): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(345): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(356): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(379): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(382): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(405): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(408): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(440): warning C4018: '<': signed/unsigned mismatch
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(451): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+c:\users\daniel\source\repos\osca1\daniel_lynch_os_ca1\main.cpp(446): warning C4715: 'GetMatchingTask': not all control paths return a value
+  LINK : C:\Users\Daniel\source\repos\OSCA1\Debug\Daniel_Lynch_OS_CA1.exe not found or not built by the last incremental link; performing full link
+Main.obj : error LNK2019: unresolved external symbol "void __cdecl swapTask(class Task &,class Task &)" (?swapTask@@YAXAAVTask@@0@Z) referenced in function "void __cdecl sort_SJF(class std::deque<class Task,class std::allocator<class Task> > &)" (?sort_SJF@@YAXAAV?$deque@VTask@@V?$allocator@VTask@@@std@@@std@@@Z)
+C:\Users\Daniel\source\repos\OSCA1\Debug\Daniel_Lynch_OS_CA1.exe : fatal error LNK1120: 1 unresolved externals
